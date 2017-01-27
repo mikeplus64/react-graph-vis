@@ -1,16 +1,40 @@
-import {default as React, Component} from 'react';
+import { default as React, Component } from 'react';
 const vis = require('vis');
 const uuid = require('uuid');
 
-class Graph extends Component {
+export default class Graph extends Component {
+
+  static defaultOptions = {
+    stabilize: false,
+    smoothCurves: false,
+    edges: {
+      color: '#000000',
+      width: 0.5,
+      arrowScaleFactor: 0.5,
+      style: 'arrow',
+    },
+    hierarchicalLayout: {
+      enabled: true,
+      direction: 'UD',
+      levelSeparation: 100,
+      nodeSpacing: 1
+    },
+  };
+
   constructor(props) {
     super(props);
-    const {identifier} = this.props;
-    this.updateGraph = this.updateGraph.bind(this);
-    this.state = {
-      hierarchicalLayout: true,
-      identifier : identifier !== undefined ? identifier : uuid.v4()
-    };
+    this.id = uuid.v4();
+    if (props.options != null) {
+      this.options = {
+        ...Graph.defaultOptions,
+        ...props.options
+      };
+    } else {
+      this.options = Graph.defaultOptions;
+    }
+    if (this.props.options) {
+      delete this.props.options;
+    }
   }
 
   componentDidMount() {
@@ -21,50 +45,22 @@ class Graph extends Component {
     this.updateGraph();
   }
 
-  changeMode(event) {
-    this.setState({hierarchicalLayout: !this.state.hierarchicalLayout});
-    this.updateGraph();
-  }
-
   updateGraph() {
-    let container = document.getElementById(this.state.identifier);
-    let options = {
-      stabilize: false,
-      smoothCurves: false,
-      edges: {
-        color: '#000000',
-        width: 0.5,
-        arrowScaleFactor: 0.5,
-        style: 'arrow'
+    if (this.container != null) {
+      if (this.vis != null) {
+        this.vis.setData(this.props.graph);
+      } else {
+        this.vis = new vis.Network(this.container, this.props.graph, this.options);
       }
-    };
-
-    if (this.state.hierarchicalLayout) {
-      options.hierarchicalLayout = {
-        enabled: true,
-        direction: 'UD',
-        levelSeparation: 100,
-        nodeSpacing: 1
-      };
-    } else {
-      options.hierarchicalLayout = {
-        enabled: false
-      };
     }
-
-    new vis.Network(container, this.props.graph, options);
   }
 
   render() {
-    const {identifier} = this.state;
-    const {style} = this.props;
-    return React.createElement('div', {onDoubleClick: this.changeMode.bind(this), id: identifier, style}, identifier);
+    return <div
+      ref={(e) => { this.container = e; }}
+      id={this.id}
+      {...this.props}
+    />;
   }
 }
 
-Graph.defaultProps = {
-  graph: {},
-  style: {width: '640px', height: '480px'}
-};
-
-export default Graph;
