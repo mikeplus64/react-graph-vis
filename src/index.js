@@ -1,10 +1,55 @@
+/* @flow */
 import { default as React, Component } from 'react';
 const vis = require('vis');
 const uuid = require('uuid');
 
-export default class Graph extends Component {
+type Id = any;
 
-  static defaultOptions = {
+type GraphOptions = {
+  stabilize?: boolean,
+  smoothCurves?: boolean,
+  edges: {
+    color?: string,
+    width: string|number,
+    arrowScaleFactor: number,
+    style: string
+  },
+  hierarchicalLayout: {
+    enabled: boolean,
+    direction: 'UD'|'TD',
+    levelSeparation: 100,
+    nodeSpacing: number,
+  },
+}
+
+type GraphProps = {
+  graph: {
+    nodes: Array<{ id: Id, label: string }>,
+    edges: Array<{ from: Id, to: Id, label?: string }>,
+  },
+  attributes: {
+    [prop: string]: any
+  },
+  options: GraphOptions,
+};
+
+interface Vis {
+  setData: (graph: { nodes: any, edges: any }) => void,
+}
+
+export default class Graph extends Component<GraphProps, GraphProps, void> {
+
+  id: any;
+  vis: ?Vis;
+  container: ?HTMLElement;
+
+  static defaultProps: GraphProps = {
+    graph: { nodes: [], edges: [] },
+    attributes: {},
+    options: Graph.defaultOptions,
+  }
+
+  static defaultOptions: GraphOptions = {
     stabilize: false,
     smoothCurves: false,
     edges: {
@@ -21,20 +66,9 @@ export default class Graph extends Component {
     },
   };
 
-  constructor(props) {
+  constructor(props: GraphProps) {
     super(props);
     this.id = uuid.v4();
-    if (props.options != null) {
-      this.options = {
-        ...Graph.defaultOptions,
-        ...props.options
-      };
-    } else {
-      this.options = Graph.defaultOptions;
-    }
-    if (this.props.options) {
-      delete this.props.options;
-    }
   }
 
   componentDidMount() {
@@ -50,7 +84,7 @@ export default class Graph extends Component {
       if (this.vis != null) {
         this.vis.setData(this.props.graph);
       } else {
-        this.vis = new vis.Network(this.container, this.props.graph, this.options);
+        this.vis = new vis.Network(this.container, this.props.graph, this.props.options);
       }
     }
   }
@@ -59,7 +93,7 @@ export default class Graph extends Component {
     return <div
       ref={(e) => { this.container = e; }}
       id={this.id}
-      {...this.props}
+      {...this.props.attributes}
     />;
   }
 }
