@@ -27,10 +27,9 @@ type GraphProps = {
     nodes: Array<{ id: Id, label: string }>,
     edges: Array<{ from: Id, to: Id, label?: string }>,
   },
-  attributes: {
-    [prop: string]: any
-  },
   options: GraphOptions,
+  style?: { [attr: string]: any },
+  className?: string,
 };
 
 interface Vis {
@@ -93,7 +92,8 @@ export default class Graph extends Component<GraphProps, GraphProps, void> {
     return <div
       ref={(e) => { this.container = e; }}
       id={this.id}
-      {...this.props.attributes}
+      style={this.props.style}
+      className={this.props.className}
     />;
   }
 }
