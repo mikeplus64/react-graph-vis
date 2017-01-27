@@ -32,15 +32,17 @@ type GraphProps = {
   className?: string,
 };
 
-interface Vis {
-  setData: (graph: { nodes: any, edges: any }) => void,
-}
+declare class Vis {
+  setData(graph: { nodes: any, edges: any }): void,
+  setOptions(opts: GraphOptions): void,
+};
 
 export default class Graph extends Component<GraphProps, GraphProps, void> {
 
   id: any;
   vis: ?Vis;
   container: ?HTMLElement;
+  props: GraphProps;
 
   static defaultProps: GraphProps = {
     graph: { nodes: [], edges: [] },
@@ -74,14 +76,20 @@ export default class Graph extends Component<GraphProps, GraphProps, void> {
     this.updateGraph();
   }
 
-  componentDidUpdate() {
-    this.updateGraph();
+  componentDidUpdate(prevProps: GraphProps) {
+    this.updateGraph(prevProps.options === this.props.options);
   }
 
-  updateGraph() {
+  updateGraph(sameOptions: boolean = true) {
     if (this.container != null) {
       if (this.vis != null) {
         this.vis.setData(this.props.graph);
+        if (!sameOptions && this.props.options != null) {
+          // flowtype doesn't see that this.vis != null already in this block of code
+          // maybe it figures .setData could null it?
+          console.log('vis setOptions');
+          this.vis.setOptions(this.props.options);
+        }
       } else {
         this.vis = new vis.Network(this.container, this.props.graph, this.props.options);
       }
